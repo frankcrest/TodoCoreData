@@ -14,6 +14,8 @@
 		E990B90D22A81B1900181A20 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E990B90B22A81B1900181A20 /* Main.storyboard */; };
 		E990B90F22A81B1A00181A20 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E990B90E22A81B1A00181A20 /* Assets.xcassets */; };
 		E990B91222A81B1A00181A20 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E990B91022A81B1A00181A20 /* LaunchScreen.storyboard */; };
+		E990B91A22A8424600181A20 /* theme.plist in Resources */ = {isa = PBXBuildFile; fileRef = E990B91922A8424600181A20 /* theme.plist */; };
+		E990B91C22A8550600181A20 /* Themes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E990B91B22A8550600181A20 /* Themes.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +28,8 @@
 		E990B90E22A81B1A00181A20 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E990B91122A81B1A00181A20 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		E990B91322A81B1A00181A20 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E990B91922A8424600181A20 /* theme.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = theme.plist; sourceTree = "<group>"; };
+		E990B91B22A8550600181A20 /* Themes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Themes.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +64,8 @@
 			children = (
 				E990B90222A81B1900181A20 /* AppDelegate.swift */,
 				E990B90722A81B1900181A20 /* MasterViewController.swift */,
+				E990B91B22A8550600181A20 /* Themes.swift */,
+				E990B91922A8424600181A20 /* theme.plist */,
 				E990B90922A81B1900181A20 /* DetailViewController.swift */,
 				E990B90B22A81B1900181A20 /* Main.storyboard */,
 				E990B90E22A81B1A00181A20 /* Assets.xcassets */,
@@ -130,6 +136,7 @@
 			files = (
 				E990B91222A81B1A00181A20 /* LaunchScreen.storyboard in Resources */,
 				E990B90F22A81B1A00181A20 /* Assets.xcassets in Resources */,
+				E990B91A22A8424600181A20 /* theme.plist in Resources */,
 				E990B90D22A81B1900181A20 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -144,6 +151,7 @@
 				E990B90622A81B1900181A20 /* ToDoCoreData.xcdatamodeld in Sources */,
 				E990B90322A81B1900181A20 /* AppDelegate.swift in Sources */,
 				E990B90822A81B1900181A20 /* MasterViewController.swift in Sources */,
+				E990B91C22A8550600181A20 /* Themes.swift in Sources */,
 				E990B90A22A81B1900181A20 /* DetailViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

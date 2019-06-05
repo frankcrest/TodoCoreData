@@ -13,7 +13,8 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
   
   var detailViewController: DetailViewController? = nil
   var managedObjectContext: NSManagedObjectContext? = nil
-  
+  var selectedTheme:String?
+  var themesInPlist:[String]?
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -25,8 +26,33 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
     if let split = splitViewController {
       let controllers = split.viewControllers
       detailViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? DetailViewController
+      
+      let swipeGesture = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe))
+      swipeGesture.direction = .left
+      tableView.isUserInteractionEnabled = true
+      tableView.addGestureRecognizer(swipeGesture)
     }
+    
     saveDefaultToDoToUserDefaults()
+    
+    updateTheme()
+  }
+  
+  func updateTheme(){
+    guard let pathURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else{return}
+    let file = "theme.plist"
+    let fileURL = pathURL.appendingPathComponent(file)
+    let path = fileURL.path
+    guard let xml = FileManager.default.contents(atPath: path) else {return}
+    guard let themes = try? PropertyListDecoder().decode(Themes.self, from: xml) else{return}
+    selectedTheme = themes.selectedTheme
+    themesInPlist = themes.theme
+    
+    if selectedTheme == "light"{
+      tableView.backgroundColor = .cyan
+    }else{
+      tableView.backgroundColor = .yellow
+    }
   }
   
   override func viewWillAppear(_ animated: Bool) {
@@ -251,6 +277,52 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
    tableView.reloadData()
    }
    */
+  func getPlist(withName name:String) -> [String]?{
+    if let path = Bundle.main.path(forResource: name, ofType: "plist"), let xml = FileManager.default.contents(atPath: path){
+      return (try? PropertyListSerialization.propertyList(from: xml, options: .mutableContainersAndLeaves, format: nil)) as? [String]
+    }
+    return nil
+  }
+  
+  @objc func handleSwipe(){
+    print("swiped")
+    let ac = UIAlertController(title: "Themes", message: "Select Theme", preferredStyle: .actionSheet)
+    let lightAction = UIAlertAction(title: "Light", style: .default) { (alert) in
+      let theme = Themes(selectedTheme:"light", theme:["light","dark"])
+      let encoder = PropertyListEncoder()
+      encoder.outputFormat = .xml
+      
+      let path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("theme.plist")
+      do {
+        let data = try encoder.encode(theme)
+        try data.write(to: path)
+      } catch {
+        print(error)
+      }
+      self.updateTheme()
+    }
+    let darkAction = UIAlertAction(title: "Dark", style: .default) { (alert) in
+      let theme = Themes(selectedTheme:"dark", theme:["light","dark"])
+      let encoder = PropertyListEncoder()
+      encoder.outputFormat = .xml
+      
+      let path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("theme.plist")
+      
+      do {
+        let data = try encoder.encode(theme)
+        try data.write(to: path)
+      } catch {
+        print(error)
+      }
+      self.updateTheme()
+    }
+    
+    let cancel = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+    ac.addAction(lightAction)
+    ac.addAction(darkAction)
+    ac.addAction(cancel)
+    self.present(ac, animated: true, completion: nil)
+  }
 }
 
 extension MasterViewController:DetailViewDelegate{
