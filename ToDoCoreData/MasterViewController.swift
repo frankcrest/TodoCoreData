@@ -26,6 +26,7 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         let controllers = split.viewControllers
         detailViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? DetailViewController
     }
+    saveDefaultToDoToUserDefaults()
   }
 
   override func viewWillAppear(_ animated: Bool) {
@@ -35,21 +36,47 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
 
   @objc
   func insertNewObject(_ sender: Any) {
+    let ud = UserDefaults.standard
+    let defaultTitle = ud.string(forKey: "todoTitle")
+    let defaultDesc = ud.string(forKey: "todoDesc")
+    
     let context = self.fetchedResultsController.managedObjectContext
-    let newEvent = Event(context: context)
-         
-    // If appropriate, configure the new managed object.
-    newEvent.timestamp = Date()
-
-    // Save the context.
-    do {
+    
+    let ac = UIAlertController(title: "Add new ToDo", message: "", preferredStyle: .alert)
+    ac.addTextField { (titleTextField) in
+      titleTextField.placeholder = defaultTitle
+    }
+    ac.addTextField { (descriptionTextField) in
+      descriptionTextField.placeholder = defaultDesc
+    }
+    
+    let saveAction = UIAlertAction(title: "Save", style: .default) { (alert) in
+      let firstTF = ac.textFields![0] as UITextField
+      let secondTF = ac.textFields![1] as UITextField
+      guard let title = firstTF.text else{return}
+      guard let description = secondTF.text else{return}
+      let newToDo = ToDo(context: context)
+      newToDo.title = title
+      newToDo.todoDescription = description
+      guard let count = self.fetchedResultsController.sections?[0].numberOfObjects else{return}
+      newToDo.priorityNumber = Int16(count + 1)
+      do {
         try context.save()
-    } catch {
+      } catch {
         // Replace this implementation with code to handle the error appropriately.
         // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
         let nserror = error as NSError
         fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
+      }
     }
+    
+    let cancelAction = UIAlertAction(title: "Cancel", style: .default, handler: nil)
+    
+    ac.addAction(saveAction)
+    ac.addAction(cancelAction)
+    
+    self.present(ac, animated: true, completion: nil)
+
   }
 
   // MARK: - Segues
@@ -79,8 +106,8 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
 
   override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
-    let event = fetchedResultsController.object(at: indexPath)
-    configureCell(cell, withEvent: event)
+    let todo = fetchedResultsController.object(at: indexPath)
+    configureCell(cell, withTodo: todo)
     return cell
   }
 
@@ -105,24 +132,29 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
     }
   }
 
-  func configureCell(_ cell: UITableViewCell, withEvent event: Event) {
-    cell.textLabel!.text = event.timestamp!.description
+  func configureCell(_ cell: UITableViewCell, withTodo todo: ToDo) {
+    guard let title = todo.title else{return}
+    guard let description = todo.todoDescription else{return}
+    let priority = todo.priorityNumber
+    
+    cell.textLabel?.text = title
+    cell.detailTextLabel?.text = description
   }
 
   // MARK: - Fetched results controller
 
-  var fetchedResultsController: NSFetchedResultsController<Event> {
+  var fetchedResultsController: NSFetchedResultsController<ToDo> {
       if _fetchedResultsController != nil {
           return _fetchedResultsController!
       }
       
-      let fetchRequest: NSFetchRequest<Event> = Event.fetchRequest()
+      let fetchRequest: NSFetchRequest<ToDo> = ToDo.fetchRequest()
       
       // Set the batch size to a suitable number.
       fetchRequest.fetchBatchSize = 20
       
       // Edit the sort key as appropriate.
-      let sortDescriptor = NSSortDescriptor(key: "timestamp", ascending: false)
+      let sortDescriptor = NSSortDescriptor(key: "priorityNumber", ascending: true)
       
       fetchRequest.sortDescriptors = [sortDescriptor]
       
@@ -143,7 +175,7 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
       
       return _fetchedResultsController!
   }    
-  var _fetchedResultsController: NSFetchedResultsController<Event>? = nil
+  var _fetchedResultsController: NSFetchedResultsController<ToDo>? = nil
 
   func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
       tableView.beginUpdates()
@@ -167,9 +199,9 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
           case .delete:
               tableView.deleteRows(at: [indexPath!], with: .fade)
           case .update:
-              configureCell(tableView.cellForRow(at: indexPath!)!, withEvent: anObject as! Event)
+              configureCell(tableView.cellForRow(at: indexPath!)!, withTodo: anObject as! ToDo)
           case .move:
-              configureCell(tableView.cellForRow(at: indexPath!)!, withEvent: anObject as! Event)
+              configureCell(tableView.cellForRow(at: indexPath!)!, withTodo: anObject as! ToDo)
               tableView.moveRow(at: indexPath!, to: newIndexPath!)
       }
   }
@@ -178,6 +210,32 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
       tableView.endUpdates()
   }
 
+  func saveDefaultToDoToUserDefaults(){
+    let ud = UserDefaults.standard
+    ud.set("clean house", forKey: "todoTitle")
+    ud.set("clean very well 5 times", forKey: "todoDesc")
+    ud.set("0", forKey: "todoPriority")
+  }
+  
+  override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
+    return true
+  }
+  
+  override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+    guard let todos = self.fetchedResultsController.sections?[0].objects else{return}
+    if let source = todos[sourceIndexPath.row] as? ToDo, let destination = todos[destinationIndexPath.row] as? ToDo{
+      let sourcePriority = source.priorityNumber
+      let destinationPriority = destination.priorityNumber
+      source.priorityNumber = destinationPriority
+      destination.priorityNumber = sourcePriority
+      let context = self.fetchedResultsController.managedObjectContext
+      do{
+        try context.save()
+      }catch let err{
+        print(err)
+      }
+    }
+  }
   /*
    // Implementing the above methods to update the table view in response to individual changes may have performance implications if a large number of changes are made simultaneously. If this proves to be an issue, you can instead just implement controllerDidChangeContent: which notifies the delegate that all section and object changes have been processed.
    
