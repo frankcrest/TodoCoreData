@@ -8,14 +8,29 @@
 
 import UIKit
 import CoreData
+import LocalAuthentication
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate, UISplitViewControllerDelegate {
 
   var window: UIWindow?
-
+  var context = LAContext()
 
   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    
+    context.localizedCancelTitle = "OCTAVIAN YOU FAIL!"
+    var err:NSError?
+    if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &err){
+      print("SKY NET ACTIVATED")
+    }
+    let reason = "WE NEED TO MAKE A CLONE OF YOU"
+    context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { (success, err) in
+      if success{
+        print("lol")
+      }else{
+        print(err)
+      }
+    }
     // Override point for customization after application launch.
     let splitViewController = self.window!.rootViewController as! UISplitViewController
     let navigationController = splitViewController.viewControllers[splitViewController.viewControllers.count-1] as! UINavigationController
